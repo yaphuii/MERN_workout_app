@@ -22,16 +22,21 @@ const WorkoutDetails = ({ workout }) => {
     const json = await response.json()
 
     if (response.ok) {
-      dispatch({type: 'DELETE_WORKOUT', payload: json})
+      dispatch({ type: 'DELETE_WORKOUT', payload: json })
     }
   }
+
+  // Check if workout.createdAt is a valid date string
+  const createdAtDate = new Date(workout.createdAt)
+  const isValidDate = !isNaN(createdAtDate.getTime())
 
   return (
     <div className="workout-details">
       <h4>{workout.title}</h4>
       <p><strong>Load (kg): </strong>{workout.load}</p>
       <p><strong>Reps: </strong>{workout.reps}</p>
-      <p>{formatDistanceToNow(new Date(workout.createdAt), { addSuffix: true })}</p>
+      {/* Only format and display the date if it's valid */}
+      <p>{isValidDate ? formatDistanceToNow(createdAtDate, { addSuffix: true }) : 'Invalid date'}</p>
       <span className="material-symbols-outlined" onClick={handleClick}>delete</span>
     </div>
   )
