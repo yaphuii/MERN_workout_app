@@ -13,16 +13,30 @@ const WorkoutDetails = ({ workout }) => {
       return
     }
 
-    const response = await fetch('/api/workouts/' + workout._id, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${user.token}`
-      }
-    })
-    const json = await response.json()
+    try {
+      const response = await fetch('/api/workouts/' + workout._id, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      })
 
-    if (response.ok) {
-      dispatch({ type: 'DELETE_WORKOUT', payload: json })
+      // Check if response is empty (e.g., 204 No Content)
+      if (response.status === 204) {
+        // Handle empty response, workout is deleted
+        dispatch({ type: 'DELETE_WORKOUT', payload: workout })
+        return
+      }
+
+      const json = await response.json()
+
+      if (response.ok) {
+        dispatch({ type: 'DELETE_WORKOUT', payload: json })
+      } else {
+        console.error('Error deleting workout:', json.error)
+      }
+    } catch (err) {
+      console.error('Failed to delete workout:', err)
     }
   }
 
