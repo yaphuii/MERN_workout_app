@@ -3,48 +3,33 @@ import { useAuthContext } from './useAuthContext'
 
 export const useLogin = () => {
   const [error, setError] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(null)
   const { dispatch } = useAuthContext()
 
   const login = async (email, password) => {
     setIsLoading(true)
     setError(null)
 
-    try {
-      const response = await fetch('/api/user/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
+    const response = await fetch('/api/user/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email, password })
+    })
+    const json = await response.json()
 
-      // Check if the response status is OK (200-299)
-      if (!response.ok) {
-        const errorText = await response.text() // Get error response as text
-        setIsLoading(false)
-        setError(errorText || `Something went wrong: ${response.status}`)
-        return
-      }
-
-      // If the response is OK, try to parse the JSON
-      let json = {}
-      try {
-        json = await response.json()
-      } catch (e) {
-        setIsLoading(false)
-        setError('Invalid response format from server.')
-        return
-      }
-
-      // Save user data to localStorage and update the auth context
+    if (!response.ok) {
+      setIsLoading(false)
+      setError(json.error)
+    }
+    if (response.ok) {
+      // save the user to local storage
       localStorage.setItem('user', JSON.stringify(json))
-      dispatch({ type: 'LOGIN', payload: json })
 
-      // Set loading to false
+      // update the auth context
+      dispatch({type: 'LOGIN', payload: json})
+
+      // update loading state
       setIsLoading(false)
-    } catch (err) {
-      // Handle network or other unexpected errors
-      setIsLoading(false)
-      setError('An error occurred during login.')
     }
   }
 
