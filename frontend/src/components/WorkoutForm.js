@@ -22,27 +22,48 @@ const WorkoutForm = () => {
 
     const workout = {title, load, reps}
 
-    const response = await fetch('/api/workouts', {
-      method: 'POST',
-      body: JSON.stringify(workout),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user.token}`
-      }
-    })
-    const json = await response.json()
+    try {
+      const response = await fetch('/api/workouts', {
+        method: 'POST',
+        body: JSON.stringify(workout),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        }
+      })
 
-    if (!response.ok) {
-      setError(json.error)
-      setEmptyFields(json.emptyFields)
-    }
-    if (response.ok) {
-      setTitle('')
-      setLoad('')
-      setReps('')
-      setError(null)
+      // Check if the response is OK (status code 200-299)
+      if (!response.ok) {
+        const errorText = await response.text()  // Read the error message as text
+        setError(errorText || `Something went wrong: ${response.status}`)
+        setEmptyFields([])
+        return
+      }
+
+      // Check if the response is valid JSON (if the body is not empty)
+      let json = {}
+      try {
+        const text = await response.text()  // Get the response text
+        json = text ? JSON.parse(text) : {}  // Parse the response text into JSON
+      } catch (err) {
+        setError('Invalid JSON response from the server.')
+        setEmptyFields([])
+        return
+      }
+
+      // Handle successful response
+      if (response.ok) {
+        setTitle('')
+        setLoad('')
+        setReps('')
+        setError(null)
+        setEmptyFields([])
+        dispatch({ type: 'CREATE_WORKOUT', payload: json })
+      }
+    } catch (err) {
+      // Handle any network or unexpected errors
+      setError('An error occurred while trying to create the workout.')
       setEmptyFields([])
-      dispatch({type: 'CREATE_WORKOUT', payload: json})
     }
   }
 
