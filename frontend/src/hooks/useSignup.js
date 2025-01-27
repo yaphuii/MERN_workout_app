@@ -25,13 +25,20 @@ export const useSignup = () => {
         return
       }
 
-      // Handle successful response and try to parse the JSON
+      // Check if response is empty
+      const responseBody = await response.text()
       let json = {}
-      try {
-        json = await response.json()
-      } catch (e) {
+      if (responseBody) {
+        try {
+          json = JSON.parse(responseBody) // Only attempt to parse if there's content
+        } catch (e) {
+          setIsLoading(false)
+          setError('Invalid JSON response from the server.')
+          return
+        }
+      } else {
         setIsLoading(false)
-        setError('Invalid JSON response from the server.')
+        setError('Empty response from the server.')
         return
       }
 
